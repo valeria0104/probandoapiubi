@@ -7,7 +7,7 @@
   <h1>Geocodificar y Ordenar Direcciones</h1>
   <div id="output"></div>
   <script>
-    // Obtener la ubicación actual del usuario utilizando red Wi-Fi (método aproximado)
+    // Obtener la ubicación actual del usuario utilizando GPS
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(function (position) {
         var userLocation = {
@@ -24,39 +24,13 @@
 
         // Geocodificar direcciones y calcular distancias
         geocodeAddresses(addresses, userLocation);
-      }, function () {
+      }, function (error) {
         // Manejo de errores si no se puede obtener la ubicación
-        console.error('Error: No se pudo obtener la ubicación precisa (GPS). Intentando con red Wi-Fi.');
-        fallbackToWifiLocation(); // Intentar obtener ubicación basada en red Wi-Fi
+        console.error('Error: No se pudo obtener la ubicación precisa (GPS).', error);
       });
     } else {
       // Manejo de navegadores que no soportan geolocalización
       console.error('Error: La geolocalización no está soportada por este navegador.');
-    }
-
-    // Función para intentar obtener ubicación basada en red Wi-Fi
-    function fallbackToWifiLocation() {
-      // Usar el servicio de ipinfo.io para obtener la ubicación aproximada basada en la IP
-      fetch('https://ipinfo.io/json?token=YOUR_IPINFO_API_KEY')
-        .then(response => response.json())
-        .then(data => {
-          var coords = data.loc.split(',');
-          var approximateLocation = {
-            lat: parseFloat(coords[0]),
-            lng: parseFloat(coords[1])
-          };
-
-          console.log('Ubicación del usuario (Wi-Fi aproximada):', approximateLocation);
-
-          // Continuar con geocodificación usando la ubicación aproximada
-          var addresses = [
-            'CC Royal Plaza, Av. Carlos Izaguirre 287-289, Independencia 15311, Perú',
-            'Av. Eduardo de Habich 599, San Martín de Porres 15103'
-          ];
-
-          geocodeAddresses(addresses, approximateLocation);
-        })
-        .catch(error => console.error('Error al obtener la ubicación basada en IP:', error));
     }
 
     // Función para geocodificar direcciones y calcular distancias
