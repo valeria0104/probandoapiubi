@@ -5,6 +5,7 @@
 </head>
 <body>
   <h1>Geocodificar y Ordenar Direcciones</h1>
+  <div id="output"></div>
   <script>
     // Obtener la ubicación actual del usuario utilizando red Wi-Fi (método aproximado)
     if (navigator.geolocation) {
@@ -35,30 +36,33 @@
 
     // Función para intentar obtener ubicación basada en red Wi-Fi
     function fallbackToWifiLocation() {
-      // Aquí puedes implementar una lógica específica para obtener la ubicación aproximada basada en Wi-Fi
-      // Esto puede variar según el navegador y el sistema operativo
-      // Por ejemplo, en algunos casos podrías usar servicios de ubicación basados en IP o técnicas de triangulación de Wi-Fi si están disponibles.
+      // Usar el servicio de ipinfo.io para obtener la ubicación aproximada basada en la IP
+      fetch('https://ipinfo.io/json?token=YOUR_IPINFO_API_KEY')
+        .then(response => response.json())
+        .then(data => {
+          var coords = data.loc.split(',');
+          var approximateLocation = {
+            lat: parseFloat(coords[0]),
+            lng: parseFloat(coords[1])
+          };
 
-      // Por simplicidad, en este ejemplo, asumimos una ubicación aproximada basada en IP
-      var approximateLocation = {
-        lat: 12.3456, // Ejemplo de latitud aproximada
-        lng: -78.9012  // Ejemplo de longitud aproximada
-      };
+          console.log('Ubicación del usuario (Wi-Fi aproximada):', approximateLocation);
 
-      console.log('Ubicación del usuario (Wi-Fi aproximada):', approximateLocation);
+          // Continuar con geocodificación usando la ubicación aproximada
+          var addresses = [
+            'CC Royal Plaza, Av. Carlos Izaguirre 287-289, Independencia 15311, Perú',
+            'Av. Eduardo de Habich 599, San Martín de Porres 15103'
+          ];
 
-      // Continuar con geocodificación usando la ubicación aproximada
-      var addresses = [
-        'CC Royal Plaza, Av. Carlos Izaguirre 287-289, Independencia 15311, Perú',
-        'Av. Eduardo de Habich 599, San Martín de Porres 15103'
-      ];
-
-      geocodeAddresses(addresses, approximateLocation);
+          geocodeAddresses(addresses, approximateLocation);
+        })
+        .catch(error => console.error('Error al obtener la ubicación basada en IP:', error));
     }
 
     // Función para geocodificar direcciones y calcular distancias
     function geocodeAddresses(addresses, userLocation) {
       var locations = [];
+      var outputDiv = document.getElementById('output');
 
       // Reemplazar 'YOUR_OPENCAGE_API_KEY' con tu clave de API de OpenCage
       var apiKey = 'ba1f067cdddc4252a54362118fd617b8';
@@ -87,16 +91,22 @@
               if (locations.length === addresses.length) {
                 locations.sort((a, b) => a.distance - b.distance);
 
-                // Mostrar las direcciones ordenadas por distancia en la consola
+                // Mostrar las direcciones ordenadas por distancia en la consola y en la pantalla
+                outputDiv.innerHTML = '';
                 locations.forEach(loc => {
                   console.log(`Dirección: ${loc.address}, Distancia: ${loc.distance.toFixed(2)} km`);
+                  outputDiv.innerHTML += `Dirección: ${loc.address}, Distancia: ${loc.distance.toFixed(2)} km<br>`;
                 });
               }
             } else {
               console.error('Geocodificación falló para la dirección: ' + address);
+              outputDiv.innerHTML += `Geocodificación falló para la dirección: ${address}<br>`;
             }
           })
-          .catch(error => console.error('Error en la solicitud fetch:', error));
+          .catch(error => {
+            console.error('Error en la solicitud fetch:', error);
+            outputDiv.innerHTML += `Error en la solicitud fetch: ${error.message}<br>`;
+          });
       });
     }
 
